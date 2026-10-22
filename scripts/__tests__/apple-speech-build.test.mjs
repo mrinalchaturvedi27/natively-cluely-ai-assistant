@@ -87,9 +87,7 @@ test('generated local helper is gitignored', () => {
 });
 
 test('Apple Speech helper name matches the runtime lookup', () => {
-  // Stealth is reverted: the helper carries the brand like the rest of the app
-  // (HELPER_NAME = disguise-name.cjs darwin value + "-asr" = "Natively-asr").
-  // The only invariant left is that the BUILT name equals what
+  // The invariant is that the BUILT helper name equals what
   // electron/audio/AppleSpeechSTT.ts looks up, or Apple Speech STT silently
   // breaks at runtime (helper spawn ENOENT).
   const runtime = fs.readFileSync(path.join(repoRoot, 'electron', 'audio', 'AppleSpeechSTT.ts'), 'utf8');
