@@ -147,19 +147,17 @@ test('renderer builds carry version and commit provenance', () => {
   assert.match(about, /VITE_BUILD_COMMIT/);
 });
 
-test('macOS Dock/Finder show the brand, and CFBundleName is left to the builder default', () => {
-  // Stealth reverted: productName IS the brand ("Natively"), so executable,
-  // CFBundleName (builder default) and helpers all read the brand too.
-  // CFBundleDisplayName still carries the brand explicitly (Dock, Finder,
-  // Spotlight, permission-prompt titles, notifications). CFBundleName must stay
-  // the builder default (= productName) so Electron's helper-app lookup, which
-  // derives from CFBundleName, keeps matching the helper bundles — pinning it to
-  // a different literal here is what caused the v2.9.1 launch crash.
+test('macOS Dock/Finder display name tracks the configured mac identity, and CFBundleName is left to the builder default', () => {
+  // CFBundleDisplayName (Dock/Finder/Spotlight) must track the configured macOS
+  // process/bundle identity from scripts/disguise-name.cjs. CFBundleName must
+  // stay the builder default (= productName) so Electron's helper-app lookup,
+  // which derives from CFBundleName, keeps matching the helper bundles.
+  const disguise = createRequire(import.meta.url)('../disguise-name.cjs');
   const extendInfo = pkg.build?.mac?.extendInfo ?? {};
   assert.equal(
     extendInfo.CFBundleDisplayName,
-    'Natively',
-    'build.mac.extendInfo.CFBundleDisplayName must be "Natively" (Dock/Finder brand)'
+    disguise.darwin,
+    `build.mac.extendInfo.CFBundleDisplayName must match disguise-name.cjs darwin ("${disguise.darwin}")`
   );
   assert.ok(
     !('CFBundleName' in extendInfo),
@@ -197,7 +195,7 @@ test('committed productName matches the single source of truth (release builds u
   // release-macos.yml invokes electron-builder DIRECTLY (it hand-rolls stages to
   // dodge a rimraf race, so package-app.js's per-platform productName swap never
   // runs). The committed productName IS the release on-disk identity, so it must
-  // equal scripts/disguise-name.cjs (now "Natively" — stealth reverted). If a
+  // equal scripts/disguise-name.cjs. If a
   // per-platform name is ever reintroduced there, this keeps the committed
   // default in lockstep with it.
   const disguise = createRequire(import.meta.url)('../disguise-name.cjs');
